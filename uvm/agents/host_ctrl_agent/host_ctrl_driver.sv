@@ -10,6 +10,13 @@ class host_ctrl_driver extends uvm_driver #(host_ctrl_item);
     virtual task run_phase(uvm_phase phase);
         vif.cb.start <= 0;
         vif.cb.device_control_write_enable <= 0;
+        fork
+            forever begin
+                @(posedge vif.reset);
+                vif.cb.start <= 0;
+                vif.cb.device_control_write_enable <= 0;
+            end
+        join_none
         forever begin
             seq_item_port.get_next_item(req);
             drive_item(req);

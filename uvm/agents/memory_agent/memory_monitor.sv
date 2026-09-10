@@ -16,6 +16,7 @@ class memory_monitor #(
     virtual task run_phase(uvm_phase phase);
         forever begin
             @(posedge vif.clk);
+            if (vif.reset) continue;
             for (int i = 0; i < NUM_CHANNELS; i++) begin
                 if (vif.read_valid[i] && vif.read_ready[i]) begin
                     memory_item item = memory_item::type_id::create("item");

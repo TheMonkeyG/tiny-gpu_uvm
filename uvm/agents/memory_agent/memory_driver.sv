@@ -26,6 +26,7 @@ class memory_driver #(
                 logic [NUM_CHANNELS-1:0] next_write_ready = 0;
                 
                 @(vif.cb);
+                if (vif.reset) continue;
                 for (int i = 0; i < NUM_CHANNELS; i++) begin
                     if (vif.cb.read_valid[i]) begin
                         next_read_data[i*DATA_BITS +: DATA_BITS] = ram[vif.cb.read_address[i*ADDR_BITS +: ADDR_BITS]];

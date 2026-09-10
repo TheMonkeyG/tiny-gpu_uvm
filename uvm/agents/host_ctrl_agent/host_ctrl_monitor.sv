@@ -14,7 +14,7 @@ class host_ctrl_monitor extends uvm_monitor;
         fork
             monitor_dcr_writes();
             monitor_start();
-        join
+        join_none
     endtask
 
     virtual task monitor_dcr_writes();
