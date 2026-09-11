@@ -14,7 +14,7 @@ class gpu_multi_reset_test extends gpu_base_test;
         `uvm_info("TEST", "S1 PASS", UVM_LOW)
 
         `uvm_info("TEST", "=== S2: start -> reset -> reset -> launch ===", UVM_LOW)
-        launch_kernel_only(4);
+        launch_trivial(4);
         #50ns; do_hw_reset(15);
         #30ns; do_hw_reset(15);
         #30ns;
@@ -26,9 +26,10 @@ class gpu_multi_reset_test extends gpu_base_test;
 
         `uvm_info("TEST", "=== S4: reset immediately after done ===", UVM_LOW)
         begin
-            gpu_matadd_seq seq4a;
-            seq4a = gpu_matadd_seq::type_id::create("seq4a");
+            gpu_kernel_seq seq4a = gpu_kernel_seq::type_id::create("seq4a");
             seq4a.num_threads = 4;
+            seq4a.data_base = 0;
+            gpu_program_lib::matadd(seq4a.prog, seq4a.data_bytes);
             seq4a.start(env.v_seqr, null, -1, 0);
         end
         env.done_ag.monitor.wait_for_done();
@@ -48,31 +49,23 @@ class gpu_multi_reset_test extends gpu_base_test;
         env.rst_ag.sequencer.execute_item(r);
     endtask
 
-    task launch_kernel_only(int threads);
-        host_ctrl_item h;
-        memory_item m0, m1;
-        m0 = memory_item::type_id::create("m0");
-        m0.op = WRITE; m0.addr = 0; m0.data = 16'h912A;
-        env.prog_mem_agent.sequencer.execute_item(m0);
-        m1 = memory_item::type_id::create("m1");
-        m1.op = WRITE; m1.addr = 1; m1.data = 16'hF000;
-        env.prog_mem_agent.sequencer.execute_item(m1);
-        h = host_ctrl_item::type_id::create("h");
-        h.is_write = 1; h.data = threads;
-        env.host_agent.sequencer.execute_item(h);
-        h = host_ctrl_item::type_id::create("h2");
-        h.is_write = 0;
-        env.host_agent.sequencer.execute_item(h);
+    task launch_trivial(int unsigned threads);
+        gpu_kernel_seq seq = gpu_kernel_seq::type_id::create("seq");
+        seq.num_threads = threads;
+        gpu_program_lib::trivial(seq.prog);
+        seq.start(env.v_seqr, null, -1, 0);
     endtask
 
-    task run_full_matadd_and_wait(int threads, string label);
+    task run_full_matadd_and_wait(int unsigned threads, string label);
         host_ctrl_item h_clr;
-        gpu_matadd_seq seq;
+        gpu_kernel_seq seq;
         h_clr = host_ctrl_item::type_id::create("h_clr");
         h_clr.is_start_clear = 1;
         env.host_agent.sequencer.execute_item(h_clr);
-        seq = gpu_matadd_seq::type_id::create("seq");
+        seq = gpu_kernel_seq::type_id::create("seq");
         seq.num_threads = threads;
+        seq.data_base = 0;
+        gpu_program_lib::matadd(seq.prog, seq.data_bytes);
         seq.start(env.v_seqr, null, -1, 0);
         fork
             begin

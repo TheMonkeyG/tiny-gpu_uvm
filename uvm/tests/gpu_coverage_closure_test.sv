@@ -1,72 +1,70 @@
-
 class gpu_coverage_closure_seq extends gpu_base_vseq;
     `uvm_object_utils(gpu_coverage_closure_seq)
 
-    int num_threads = 1;
     int prog_sel = 1;
 
     function new(string name = "gpu_coverage_closure_seq");
         super.new(name);
     endfunction
 
-    virtual task set_thread_count(int thread_count);
-        host_ctrl_item h = host_ctrl_item::type_id::create("h");
-        h.is_write = 1; h.data = thread_count;
-        p_sequencer.host_seqr.execute_item(h);
-    endtask
-
-    virtual task start_kernel();
-        host_ctrl_item h = host_ctrl_item::type_id::create("h2");
-        h.is_write = 0;
-        p_sequencer.host_seqr.execute_item(h);
-    endtask
-
-    function automatic logic [15:0] br_word(logic [2:0] mask, logic [7:0] imm);
-        return 16'h1000 | (mask << 9) | imm;
+    virtual function void build_program();
+        case (prog_sel)
+            1: branch_prog_a();
+            2: branch_prog_b();
+            3: branch_prog_c();
+            4: alu_prog();
+            5: prot_prog();
+        endcase
     endfunction
 
-    function void get_branch_prog_a(ref logic [15:0] prog[$]);
+    function void branch_prog_a();
         prog = '{
-            16'h9101, 16'h9200,
-            16'h2012, br_word(3'b001, 5),  16'h90EE, 16'h90DD,
-            16'h2012, br_word(3'b010, 9),  16'h90EE, 16'h90DD,
-            16'h2012, br_word(3'b100, 13), 16'h90EE, 16'h90DD,
-            16'h2012, br_word(3'b011, 17), 16'h90EE, 16'h90DD,
-            16'h2012, br_word(3'b101, 21), 16'h90EE, 16'h90DD,
-            16'h2012, br_word(3'b110, 25), 16'h90EE, 16'h90DD,
-            16'h2012, br_word(3'b111, 29), 16'h90EE, 16'h90DD,
-            16'hF000
+            instr_const(REG_R1, 8'h01),
+            instr_const(REG_R2, 8'h00),
+            instr_cmp(REG_R1, REG_R2),
+            instr_brnzp(3'b001, 8'h06),  instr_const(REG_R14, 8'hEE), instr_const(REG_R13, 8'hDD),
+            instr_brnzp(3'b010, 8'h09),  instr_const(REG_R14, 8'hEE), instr_const(REG_R13, 8'hDD),
+            instr_brnzp(3'b100, 8'h0C),  instr_const(REG_R14, 8'hEE), instr_const(REG_R13, 8'hDD),
+            instr_brnzp(3'b011, 8'h0F),  instr_const(REG_R14, 8'hEE), instr_const(REG_R13, 8'hDD),
+            instr_brnzp(3'b101, 8'h12),  instr_const(REG_R14, 8'hEE), instr_const(REG_R13, 8'hDD),
+            instr_brnzp(3'b110, 8'h15),  instr_const(REG_R14, 8'hEE), instr_const(REG_R13, 8'hDD),
+            instr_brnzp(3'b111, 8'h18),  instr_const(REG_R14, 8'hEE), instr_const(REG_R13, 8'hDD),
+            instr_ret()
         };
     endfunction
 
-    function void get_branch_prog_b(ref logic [15:0] prog[$]);
+    function void branch_prog_b();
         prog = '{
-            16'h9100, 16'h9201,
-            16'h2012, br_word(3'b001, 5),  16'h90EE, 16'h90DD,
-            16'h2012, br_word(3'b010, 9),  16'h90EE, 16'h90DD,
-            16'h2012, br_word(3'b100, 13), 16'h90EE, 16'h90DD,
-            16'h2012, br_word(3'b011, 17), 16'h90EE, 16'h90DD,
-            16'h2012, br_word(3'b101, 21), 16'h90EE, 16'h90DD,
-            16'h2012, br_word(3'b110, 25), 16'h90EE, 16'h90DD,
-            16'h2012, br_word(3'b111, 29), 16'h90EE, 16'h90DD,
-            16'hF000
+            instr_const(REG_R1, 8'h00),
+            instr_const(REG_R2, 8'h01),
+            instr_cmp(REG_R1, REG_R2),
+            instr_brnzp(3'b001, 8'h06),  instr_const(REG_R14, 8'hEE), instr_const(REG_R13, 8'hDD),
+            instr_brnzp(3'b010, 8'h09),  instr_const(REG_R14, 8'hEE), instr_const(REG_R13, 8'hDD),
+            instr_brnzp(3'b100, 8'h0C),  instr_const(REG_R14, 8'hEE), instr_const(REG_R13, 8'hDD),
+            instr_brnzp(3'b011, 8'h0F),  instr_const(REG_R14, 8'hEE), instr_const(REG_R13, 8'hDD),
+            instr_brnzp(3'b101, 8'h12),  instr_const(REG_R14, 8'hEE), instr_const(REG_R13, 8'hDD),
+            instr_brnzp(3'b110, 8'h15),  instr_const(REG_R14, 8'hEE), instr_const(REG_R13, 8'hDD),
+            instr_brnzp(3'b111, 8'h18),  instr_const(REG_R14, 8'hEE), instr_const(REG_R13, 8'hDD),
+            instr_ret()
         };
     endfunction
 
-    function void get_branch_prog_c(ref logic [15:0] prog[$]);
+    function void branch_prog_c();
         prog = '{
-            br_word(3'b111, 4),
-            br_word(3'b101, 4),
-            16'h0000, 16'h0000,
-            16'h9105, 16'h9205,
-            16'h2012,
-            br_word(3'b010, 10),
-            16'h90EE, 16'h0000,
-            16'hF000
+            instr_brnzp(3'b111, 8'h04),
+            instr_brnzp(3'b101, 8'h04),
+            instr_nop(),
+            instr_nop(),
+            instr_const(REG_R1, 8'h05),
+            instr_const(REG_R2, 8'h05),
+            instr_cmp(REG_R1, REG_R2),
+            instr_brnzp(3'b010, 8'h0A),  instr_const(REG_R14, 8'hEE),
+            instr_nop(),
+            instr_ret()
         };
     endfunction
 
-    function void get_alu_prog(ref logic [15:0] prog[$]);
+    function void alu_prog();
         int alu_pairs[10][2] = '{
             '{8'h00, 8'h00}, '{8'h01, 8'h01}, '{8'h7F, 8'h80},
             '{8'h80, 8'hFF}, '{8'hFF, 8'hFF}, '{8'hC8, 8'hC8},
@@ -75,49 +73,33 @@ class gpu_coverage_closure_seq extends gpu_base_vseq;
         };
         prog.delete();
         foreach (alu_pairs[i]) begin
-            prog.push_back(16'h9100 | alu_pairs[i][0]);
-            prog.push_back(16'h9200 | alu_pairs[i][1]);
-            prog.push_back(16'h3312);
-            prog.push_back(16'h4412);
-            prog.push_back(16'h5512);
-            prog.push_back(16'h6612);
+            prog.push_back(instr_const(REG_R1, alu_pairs[i][0][7:0]));
+            prog.push_back(instr_const(REG_R2, alu_pairs[i][1][7:0]));
+            prog.push_back(instr_add(REG_R3, REG_R1, REG_R2));
+            prog.push_back(instr_sub(REG_R4, REG_R1, REG_R2));
+            prog.push_back(instr_mul(REG_R5, REG_R1, REG_R2));
+            prog.push_back(instr_div(REG_R6, REG_R1, REG_R2));
         end
-        prog.push_back(16'hF000);
+        prog.push_back(instr_ret());
     endfunction
 
-    function void get_prot_prog(ref logic [15:0] prog[$]);
+    function void prot_prog();
         prog = '{
-            16'h9105, 16'h9205,
-            16'h2012,
-            16'h9D55,
-            16'h9E66,
-            16'h9F77,
-            16'hA000,
-            16'hB123,
-            16'hC456,
-            16'hD789,
-            16'hEABC,
-            16'h0000,
-            16'hF000
+            instr_const(REG_R1, 8'h05),
+            instr_const(REG_R2, 8'h05),
+            instr_cmp(REG_R1, REG_R2),
+            instr_const(REG_R13, 8'h55),
+            instr_const(REG_R14, 8'h66),
+            instr_const(REG_R15, 8'h77),
+            instr_raw(16'hA000),
+            instr_raw(16'hB123),
+            instr_raw(16'hC456),
+            instr_raw(16'hD789),
+            instr_raw(16'hEABC),
+            instr_nop(),
+            instr_ret()
         };
     endfunction
-
-    virtual task body();
-        logic [15:0] prog[$];
-
-        set_thread_count(num_threads);
-
-        case (prog_sel)
-            1: get_branch_prog_a(prog);
-            2: get_branch_prog_b(prog);
-            3: get_branch_prog_c(prog);
-            4: get_alu_prog(prog);
-            5: get_prot_prog(prog);
-        endcase
-
-        load_program(prog);
-        start_kernel();
-    endtask
 endclass
 
 
@@ -145,21 +127,9 @@ class gpu_coverage_closure_test extends gpu_base_test;
             seq.num_threads = 1;
             seq.prog_sel = k;
             seq.start(env.v_seqr, null, -1, 0);
+            seq.wait_kernel_done(labels[k-1]);
 
-            fork
-                env.done_ag.monitor.wait_for_done();
-                begin
-                    #(env.cfg.watchdog_timeout_ns * 1ns);
-                    `uvm_error("TEST", $sformatf("%s: kernel timeout!", labels[k-1]))
-                end
-            join_any
-            disable fork;
-
-            begin
-                host_ctrl_item h_clr = host_ctrl_item::type_id::create("h_clr");
-                h_clr.is_start_clear = 1;
-                env.host_agent.sequencer.execute_item(h_clr);
-            end
+            seq.clear_start();
 
             begin
                 rst_item r_item = rst_item::type_id::create("r_item");

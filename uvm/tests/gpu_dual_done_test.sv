@@ -6,32 +6,19 @@ class gpu_dual_done_test extends gpu_base_test;
     endfunction
 
     virtual task run_phase(uvm_phase phase);
-        gpu_dual_done_seq seq;
+        gpu_kernel_seq seq;
         phase.raise_objection(this);
         start_clk_and_reset();
 
-        seq = gpu_dual_done_seq::type_id::create("seq");
+        seq = gpu_kernel_seq::type_id::create("seq");
+        seq.num_threads = 8;
+        gpu_program_lib::scatter(seq.prog, 8'h20);
         seq.start(env.v_seqr, null, -1, 0);
+        seq.wait_kernel_done("dual-block done");
 
-        fork
-            begin
-                env.done_ag.monitor.wait_for_done();
-                `uvm_info("TEST", "PASS: dual-block done", UVM_LOW)
-            end
-            begin
-                #(env.cfg.watchdog_timeout_ns * 1ns);
-                `uvm_error("TEST_TIMEOUT", "DUT hang: blocks_done may have lost simultaneous core_done signal.")
-            end
-        join_any
-        disable fork;
-
+        `uvm_info("TEST", "PASS: dual-block done", UVM_LOW)
         #(env.cfg.post_done_drain_ns * 1ns);
-        begin
-            host_ctrl_item h_clr = host_ctrl_item::type_id::create("h_clr");
-            h_clr.is_start_clear = 1;
-            env.host_agent.sequencer.execute_item(h_clr);
-        end
-
+        seq.clear_start();
         phase.drop_objection(this);
     endtask
 endclass

@@ -73,6 +73,7 @@ class core_ref;
                     endcase
                 end
                 pcs[t].update_nzp(d.nzp_write_enable, alu_out[2:0]);
+            end
             current_pc = (active_threads > 0) ? pcs[0].pc : 0;
         end
     endfunction

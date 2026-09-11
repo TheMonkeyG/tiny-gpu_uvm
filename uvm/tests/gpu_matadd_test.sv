@@ -6,24 +6,20 @@ class gpu_matadd_test extends gpu_base_test;
     endfunction
 
     virtual task run_phase(uvm_phase phase);
-        gpu_matadd_seq seq = gpu_matadd_seq::type_id::create("seq");
+        gpu_kernel_seq seq;
         phase.raise_objection(this);
         start_clk_and_reset();
 
         `uvm_info("TEST", "Starting MatAdd (8 threads)", UVM_LOW)
+        seq = gpu_kernel_seq::type_id::create("seq");
         seq.num_threads = 8;
+        seq.data_base = 0;
+        gpu_program_lib::matadd(seq.prog, seq.data_bytes);
         seq.start(env.v_seqr, null, -1, 0);
-
-        fork
-            env.done_ag.monitor.wait_for_done();
-            begin
-                #(env.cfg.watchdog_timeout_ns * 1ns);
-                `uvm_error("TEST", "MatAdd timeout!")
-            end
-        join_any
-        disable fork;
+        seq.wait_kernel_done("MatAdd");
 
         #(env.cfg.post_done_drain_ns * 1ns);
+        seq.clear_start();
         phase.drop_objection(this);
     endtask
 endclass

@@ -64,6 +64,6 @@ class gpu_ref_model;
                 end
             end
         end
-        return 0; // Unexpected write
+        return 0;
     endfunction
 endclass

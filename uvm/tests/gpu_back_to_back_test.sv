@@ -1,52 +1,46 @@
 class gpu_back_to_back_test extends gpu_base_test;
     `uvm_component_utils(gpu_back_to_back_test)
 
-    int kernel_num;
-
     function new(string name = "gpu_back_to_back_test", uvm_component parent = null);
         super.new(name, parent);
-        kernel_num = 0;
     endfunction
 
     virtual task run_phase(uvm_phase phase);
+        gpu_kernel_seq seq;
         phase.raise_objection(this);
         start_clk_and_reset();
 
         `uvm_info("TEST", "=== KERNEL 1: MatAdd 8 threads ===", UVM_LOW)
-        begin
-            gpu_matadd_seq seq;
-            seq = gpu_matadd_seq::type_id::create("seq");
-            seq.num_threads = 8;
-            seq.start(env.v_seqr, null, -1, 0);
-        end
+        seq = new_matadd(8);
+        seq.start(env.v_seqr, null, -1, 0);
         wait_done_or_timeout("Kernel 1 (MatAdd 8t)");
-        clear_start_no_reset();
+        seq.clear_start();
 
         `uvm_info("TEST", "=== KERNEL 2: MatAdd 4 threads (no reset!) ===", UVM_LOW)
         if (env.cfg.en_scoreboard) env.scoreboard.reset();
-        begin
-            gpu_matadd_seq seq;
-            seq = gpu_matadd_seq::type_id::create("seq");
-            seq.num_threads = 4;
-            seq.start(env.v_seqr, null, -1, 0);
-        end
+        seq = new_matadd(4);
+        seq.start(env.v_seqr, null, -1, 0);
         wait_done_or_timeout("Kernel 2 (MatAdd 4t, no reset)");
-        clear_start_no_reset();
+        seq.clear_start();
 
         `uvm_info("TEST", "=== KERNEL 3: MatAdd 8 threads (no reset!) ===", UVM_LOW)
         if (env.cfg.en_scoreboard) env.scoreboard.reset();
-        begin
-            gpu_matadd_seq seq;
-            seq = gpu_matadd_seq::type_id::create("seq");
-            seq.num_threads = 8;
-            seq.start(env.v_seqr, null, -1, 0);
-        end
+        seq = new_matadd(8);
+        seq.start(env.v_seqr, null, -1, 0);
         wait_done_or_timeout("Kernel 3 (MatAdd 8t, no reset)");
-        clear_start_no_reset();
+        seq.clear_start();
 
         `uvm_info("TEST", "Back-to-back test complete", UVM_LOW)
         phase.drop_objection(this);
     endtask
+
+    function gpu_kernel_seq new_matadd(int unsigned threads);
+        gpu_kernel_seq seq = gpu_kernel_seq::type_id::create("seq");
+        seq.num_threads = threads;
+        seq.data_base = 0;
+        gpu_program_lib::matadd(seq.prog, seq.data_bytes);
+        return seq;
+    endfunction
 
     task wait_done_or_timeout(string label);
         fork
@@ -67,12 +61,5 @@ class gpu_back_to_back_test extends gpu_base_test;
         join_any
         disable fork;
         #(env.cfg.post_done_drain_ns * 1ns);
-    endtask
-
-    task clear_start_no_reset();
-        host_ctrl_item h_clr = host_ctrl_item::type_id::create("h_clr");
-        h_clr.is_start_clear = 1;
-        env.host_agent.sequencer.execute_item(h_clr);
-        #20ns;
     endtask
 endclass

@@ -58,5 +58,7 @@ class gpu_env extends uvm_env;
         v_seqr.host_seqr = host_agent.sequencer;
         v_seqr.prog_seqr = prog_mem_agent.sequencer;
         v_seqr.data_seqr = data_mem_agent.sequencer;
+        v_seqr.done_mon = done_ag.monitor;
+        if (cfg != null) v_seqr.watchdog_timeout_ns = cfg.watchdog_timeout_ns;
     endfunction
 endclass

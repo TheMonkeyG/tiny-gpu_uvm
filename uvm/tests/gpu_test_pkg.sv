@@ -7,6 +7,8 @@ package gpu_test_pkg;
     import done_pkg::*;
     import host_ctrl_pkg::*;
     import memory_pkg::*;
+    import gpu_isa_pkg::*;
+    import gpu_program_lib_pkg::*;
     import gpu_env_pkg::*;
     import gpu_seq_pkg::*;
 

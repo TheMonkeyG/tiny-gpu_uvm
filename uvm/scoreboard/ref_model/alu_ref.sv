@@ -4,7 +4,7 @@ class alu_ref;
             2'b00:   return rs + rt;
             2'b01:   return rs - rt;
             2'b10:   return rs * rt;
-            2'b11:   return (rt == 0) ? 8'h00 : rs / rt; // match DUT alu.sv DIV-by-zero guard
+            2'b11:   return (rt == 0) ? 8'h00 : rs / rt;
             default: return 8'h00;
         endcase
     endfunction
