@@ -20,6 +20,9 @@ class gpu_scoreboard extends uvm_scoreboard;
     int   match_count;
     int   mismatch_count;
     int   total_writes;
+    int   cum_writes;
+    int   cum_matches;
+    int   cum_mismatches;
 
     function new(string name, uvm_component parent);
         super.new(name, parent);
@@ -50,29 +53,37 @@ class gpu_scoreboard extends uvm_scoreboard;
         if (item.is_write) begin
             ref_model.set_thread_count(item.data);
             `uvm_info("SCB", $sformatf("REF: thread_count = %0d", item.data), UVM_MEDIUM)
-        end else if (!kernel_started) begin
-            kernel_started = 1;
-            `uvm_info("SCB", "REF: Kernel started", UVM_LOW)
-            ref_model.execute();
+        end else begin
+            if (kernel_started) begin
+                `uvm_info("SCB", "REF: New kernel start (no reset) — re-arming", UVM_LOW)
+                ref_model.execute();
+            end else begin
+                kernel_started = 1;
+                `uvm_info("SCB", "REF: Kernel started", UVM_LOW)
+                ref_model.execute();
+            end
         end
     endfunction
 
     virtual function void write_prog_mem(memory_item item);
-        if (item.op == memory_item::WRITE) ref_model.load_prog(item.addr, item.data[15:0]);
+        if (item.op == WRITE) ref_model.load_prog(item.addr, item.data[15:0]);
     endfunction
 
     virtual function void write_data_mem(memory_item item);
-        if (item.op == memory_item::WRITE) begin
+        if (item.op == WRITE) begin
             if (!kernel_started) begin
                 ref_model.load_data(item.addr, item.data[7:0]);
                 return;
             end
             total_writes++;
+            cum_writes++;
             if (ref_model.check_write(item.addr, item.data[7:0])) begin
                 match_count++;
+                cum_matches++;
                 `uvm_info("SCB", $sformatf("MATCH addr=0x%02h data=0x%02h", item.addr, item.data[7:0]), UVM_LOW)
             end else begin
                 mismatch_count++;
+                cum_mismatches++;
                 `uvm_error("SCB", $sformatf("MISMATCH addr=0x%02h actual=0x%02h expected=0x%02h", 
                     item.addr, item.data[7:0], ref_model.get_expected(item.addr)))
             end
@@ -95,9 +106,9 @@ class gpu_scoreboard extends uvm_scoreboard;
     virtual function void check_phase(uvm_phase phase);
         super.check_phase(phase);
         if (kernel_started && ref_model.executed) begin
-            if (total_writes != ref_model.expected_writes.size())
-                `uvm_error("SCB", $sformatf("Count mismatch: DUT=%0d, REF=%0d", 
-                    total_writes, ref_model.expected_writes.size()))
+            if (ref_model.expected_writes.size() != 0)
+                `uvm_error("SCB", $sformatf("Count mismatch: %0d expected writes were never seen", 
+                    ref_model.expected_writes.size()))
         end
     endfunction
 
@@ -105,8 +116,8 @@ class gpu_scoreboard extends uvm_scoreboard;
         super.report_phase(phase);
         `uvm_info("SCB", "--------------------------------------------", UVM_LOW)
         `uvm_info("SCB", $sformatf("  Writes: %0d | Matches: %0d | Mismatches: %0d", 
-            total_writes, match_count, mismatch_count), UVM_LOW)
-        `uvm_info("SCB", $sformatf("  Status: %s", (mismatch_count==0 && match_count>0) ? "PASS" : "FAIL"), UVM_LOW)
+            cum_writes, cum_matches, cum_mismatches), UVM_LOW)
+        `uvm_info("SCB", $sformatf("  Status: %s", (cum_mismatches==0 && cum_matches>0) ? "PASS" : "FAIL"), UVM_LOW)
         `uvm_info("SCB", "--------------------------------------------", UVM_LOW)
     endfunction
 endclass

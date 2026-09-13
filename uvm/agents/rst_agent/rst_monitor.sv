@@ -10,6 +10,7 @@ class rst_monitor extends uvm_monitor;
     endfunction
 
     virtual task run_phase(uvm_phase phase);
+        wait (!$isunknown(vif.reset));
         forever begin
             rst_item item;
             time rst_begin, rst_end;

@@ -1,9 +1,5 @@
 class host_ctrl_item extends uvm_sequence_item;
-    `uvm_object_utils_begin(host_ctrl_item)
-        `uvm_field_int(data,           UVM_ALL_ON)
-        `uvm_field_int(is_write,       UVM_ALL_ON)
-        `uvm_field_int(is_start_clear, UVM_ALL_ON)
-    `uvm_object_utils_end
+    `uvm_object_utils(host_ctrl_item)
 
     rand logic [7:0] data;
     rand logic       is_write;

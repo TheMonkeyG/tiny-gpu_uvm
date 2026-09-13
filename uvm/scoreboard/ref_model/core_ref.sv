@@ -74,9 +74,7 @@ class core_ref;
                 end
                 pcs[t].update_nzp(d.nzp_write_enable, alu_out[2:0]);
             end
-
-            // Sync PC from the last active thread (avoids partial block hang)
-            current_pc = (active_threads > 0) ? pcs[active_threads-1].pc : 0;
+            current_pc = (active_threads > 0) ? pcs[0].pc : 0;
         end
     endfunction
 endclass

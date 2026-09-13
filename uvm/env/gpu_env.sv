@@ -51,12 +51,14 @@ class gpu_env extends uvm_env;
 
         if (cfg.en_coverage) begin
             host_agent.monitor.ap.connect(coverage_col.host_export);
-            prog_mem_agent.driver.ap.connect(coverage_col.prog_mem_export);
+            prog_mem_agent.monitor.ap.connect(coverage_col.prog_mem_export);
             data_mem_agent.monitor.ap.connect(coverage_col.data_mem_export);
         end
 
         v_seqr.host_seqr = host_agent.sequencer;
         v_seqr.prog_seqr = prog_mem_agent.sequencer;
         v_seqr.data_seqr = data_mem_agent.sequencer;
+        v_seqr.done_mon = done_ag.monitor;
+        if (cfg != null) v_seqr.watchdog_timeout_ns = cfg.watchdog_timeout_ns;
     endfunction
 endclass

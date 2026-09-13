@@ -4,12 +4,12 @@ class alu_ref;
             2'b00:   return rs + rt;
             2'b01:   return rs - rt;
             2'b10:   return rs * rt;
-            2'b11:   return rs / rt;
+            2'b11:   return (rt == 0) ? 8'h00 : rs / rt;
             default: return 8'h00;
         endcase
     endfunction
 
     static function logic [2:0] compare(logic [7:0] rs, logic [7:0] rt);
-        return { ($signed(rs) > $signed(rt)), (rs == rt), ($signed(rs) < $signed(rt)) };
+        return { ($signed(rs) < $signed(rt)), (rs == rt), ($signed(rs) > $signed(rt)) };
     endfunction
 endclass

@@ -7,7 +7,6 @@ package gpu_scoreboard_pkg;
     import done_pkg::*;
     import rst_pkg::*;
 
-    // Reference model modules (order matters — dependencies first)
     `include "ref_model/alu_ref.sv"
     `include "ref_model/decoder_ref.sv"
     `include "ref_model/regfile_ref.sv"
@@ -16,9 +15,7 @@ package gpu_scoreboard_pkg;
     `include "ref_model/dispatcher_ref.sv"
     `include "ref_model/gpu_ref.sv"
 
-    // Scoreboard
     `include "gpu_scoreboard.sv"
 
-    // Coverage
     `include "gpu_coverage.sv"
 endpackage

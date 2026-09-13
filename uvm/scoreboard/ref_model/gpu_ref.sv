@@ -55,6 +55,15 @@ class gpu_ref_model;
     function logic [7:0] get_expected(logic [7:0] addr); return expected_data_mem[addr]; endfunction
 
     function bit check_write(logic [7:0] addr, logic [7:0] actual_data);
-        return (executed && actual_data === expected_data_mem[addr]);
+        if (!executed) return 0;
+        for (int i = 0; i < expected_writes.size(); i++) begin
+            if (expected_writes[i].addr === addr) begin
+                if (expected_writes[i].data === actual_data) begin
+                    expected_writes.delete(i);
+                    return 1;
+                end
+            end
+        end
+        return 0;
     endfunction
 endclass

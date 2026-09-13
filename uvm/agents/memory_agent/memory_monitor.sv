@@ -16,10 +16,11 @@ class memory_monitor #(
     virtual task run_phase(uvm_phase phase);
         forever begin
             @(posedge vif.clk);
+            if (vif.reset) continue;
             for (int i = 0; i < NUM_CHANNELS; i++) begin
                 if (vif.read_valid[i] && vif.read_ready[i]) begin
                     memory_item item = memory_item::type_id::create("item");
-                    item.op = memory_item::READ;
+                    item.op = READ;
                     item.addr = vif.read_address[i*ADDR_BITS +: ADDR_BITS];
                     item.data = vif.read_data[i*DATA_BITS +: DATA_BITS];
                     item.channel = i;
@@ -27,7 +28,7 @@ class memory_monitor #(
                 end
                 if (vif.write_valid[i] && vif.write_ready[i]) begin
                     memory_item item = memory_item::type_id::create("item");
-                    item.op = memory_item::WRITE;
+                    item.op = WRITE;
                     item.addr = vif.write_address[i*ADDR_BITS +: ADDR_BITS];
                     item.data = vif.write_data[i*DATA_BITS +: DATA_BITS];
                     item.channel = i;

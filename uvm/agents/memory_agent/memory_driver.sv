@@ -20,13 +20,13 @@ class memory_driver #(
         vif.cb.write_ready <= 0;
 
         fork
-            // Process 1: Respond to GPU requests
             forever begin
                 logic [NUM_CHANNELS*DATA_BITS-1:0] next_read_data = 0;
                 logic [NUM_CHANNELS-1:0] next_read_ready = 0;
                 logic [NUM_CHANNELS-1:0] next_write_ready = 0;
                 
                 @(vif.cb);
+                if (vif.reset) continue;
                 for (int i = 0; i < NUM_CHANNELS; i++) begin
                     if (vif.cb.read_valid[i]) begin
                         next_read_data[i*DATA_BITS +: DATA_BITS] = ram[vif.cb.read_address[i*ADDR_BITS +: ADDR_BITS]];
@@ -41,10 +41,9 @@ class memory_driver #(
                 vif.cb.read_ready <= next_read_ready;
                 vif.cb.write_ready <= next_write_ready;
             end
-            // Process 2: Preload from sequence
             forever begin
                 seq_item_port.get_next_item(req);
-                if (req.op == memory_item::WRITE) begin
+                if (req.op == WRITE) begin
                     ram[req.addr] = req.data;
                     ap.write(req);
                 end

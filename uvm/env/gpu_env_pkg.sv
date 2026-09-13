@@ -2,6 +2,8 @@ package gpu_env_pkg;
     import uvm_pkg::*;
     `include "uvm_macros.svh"
 
+    import gpu_isa_pkg::*;
+    import gpu_program_lib_pkg::*;
     import clk_pkg::*;
     import rst_pkg::*;
     import done_pkg::*;

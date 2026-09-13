@@ -1,14 +1,9 @@
+typedef enum {READ, WRITE} op_e;
+
 class memory_item extends uvm_sequence_item;
-    `uvm_object_utils_begin(memory_item)
-        `uvm_field_enum(op_e, op, UVM_ALL_ON)
-        `uvm_field_int(addr,     UVM_ALL_ON)
-        `uvm_field_int(data,     UVM_ALL_ON)
-        `uvm_field_int(channel,  UVM_ALL_ON)
-    `uvm_object_utils_end
+    `uvm_object_utils(memory_item)
 
-    typedef enum {READ, WRITE} op_e;
-
-    rand op_e          op;
+    rand int           op;
     rand logic [7:0]   addr;
     rand logic [15:0]  data;
     rand int           channel;
@@ -18,6 +13,6 @@ class memory_item extends uvm_sequence_item;
     endfunction
 
     virtual function string convert2string();
-        return $sformatf("op=%s addr=0x%0h data=0x%0h channel=%0d", op.name(), addr, data, channel);
+        return $sformatf("op=%s addr=0x%0h data=0x%0h channel=%0d", (op==WRITE) ? "WRITE" : "READ", addr, data, channel);
     endfunction
 endclass
