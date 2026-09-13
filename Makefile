@@ -9,15 +9,18 @@ test_%:
 	MODULE=test.test_$* vvp -M $$(cocotb-config --prefix)/cocotb/libs -m libcocotbvpi_icarus build/sim.vvp
 
 compile:
+	mkdir -p build
 	make compile_alu
 	sv2v -I src/* -w build/gpu.v
 	echo "" >> build/gpu.v
 	cat build/alu.v >> build/gpu.v
 	echo '`timescale 1ns/1ns' > build/temp.v
 	cat build/gpu.v >> build/temp.v
+	echo '`default_nettype wire' >> build/temp.v
 	mv build/temp.v build/gpu.v
 
 compile_%:
+	mkdir -p build
 	sv2v -w build/$*.v src/$*.sv
 
 # TODO: Get gtkwave visualizaiton
